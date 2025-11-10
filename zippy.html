@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="en" id="html-tag" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My-T Scorer – Zippy Scorer</title>
+    <link rel="icon" href="mahimage.jpg" type="image/jpeg">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom font import for aesthetics */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+        /* Base styles (from index.html) */
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* --- NEW: Spin Animation --- */
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .spin-animation { animation-name: spin; animation-duration: 0.7s; animation-timing-function: linear; animation-iteration-count: 1; }
+        /* --- END NEW --- */
+
+        /* --- Light Theme (Default) --- */
+        body {
+            background-color: #f3f4f6; /* gray-100 */
+            color: #111827; /* gray-900 */
+        }
+        .container { max-width: 100%; margin: auto; padding: 1.5rem; }
+        .table-container { overflow-x: auto; }
+        .styled-table { min-width: 100%; border-collapse: separate; border-spacing: 0 0.5rem; }
+        th, td { padding: 1rem; text-align: center; white-space: nowrap; }
+        .rounded-card {
+            background-color: #ffffff;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e5e7eb; /* gray-200 */
+        }
+        input[type="text"], input[type="number"], select {
+            border: 1px solid #6b7280; /* MODIFIED: gray-500 for darker border */
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+            width: 100%;
+            transition: all 0.2s;
+            background-color: #ffffff;
+            color: #111827;
+        }
+        /* NEW: Style for settings inputs */
+        .settings-input {
+            width: 60px;
+            text-align: center;
+            padding: 0.25rem 0.5rem;
+        }
+        .type-select { min-width: max-content; padding-right: 2.5rem; }
+        option:disabled { color: #ef4444; font-weight: 600; }
+        input[type="text"]:focus, input[type="number"]:focus, select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+        input:disabled, select:disabled {
+            background-color: #e5e7eb; /* gray-200 */
+            cursor: not-allowed;
+            color: #6b7280; /* gray-500 */
+            opacity: 0.7;
+        }
+        input:read-only {
+            background-color: #f3f4f6; /* gray-100 */
+            font-weight: bold;
+            color: #16a34a; /* green-600 */
+            border-style: dashed;
+        }
+        .btn { padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); }
+        .btn:disabled { background-color: #d1d5db; /* gray-300 */ cursor: not-allowed; opacity: 0.7; color: #6b7280; }
+        .btn-green { background-color: #22c55e; color: #ffffff; }
+        .btn-green:hover:not(:disabled) { background-color: #16a34a; }
+        .btn-red { background-color: #ef4444; color: #ffffff; }
+        .btn-red:hover:not(:disabled) { background-color: #dc2626; }
+        .btn-gray { background-color: #6b7280; color: #ffffff; }
+        .btn-gray:hover:not(:disabled) { background-color: #4b5563; }
+        .total-row { font-weight: bold; background-color: #f3f4f6; /* gray-100 */ }
+        .round-row { transition: background-color 0.2s; background-color: #ffffff; border-radius: 0.5rem; cursor: pointer; }
+        .round-row:hover { background-color: #f9fafb; /* gray-50 */ }
+        .custom-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.4); display: flex; justify-content: center; align-items: center; z-index: 1000; display: none; }
+        .modal-content { background-color: #ffffff; padding: 2rem; border-radius: 1rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); text-align: center; color: #111827; max-width: 90%; max-height: 90%; display: flex; flex-direction: column; position: relative; }
+        .modal-body { overflow-y: auto; padding-right: 1rem; margin-right: -1rem; }
+        .modal-footer { flex-shrink: 0; padding-top: 1.5rem; }
+        .modal-content h3 { font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; }
+        .modal-content .btn-container { display: flex; justify-content: center; gap: 1rem; }
+        .round-btn { background-color: #22c55e; color: white; font-weight: bold; padding: 0.5rem 1rem; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); display: inline-block; }
+        .round-btn:hover { background-color: #16a34a; }
+        .player-input {
+            background-color: #ffffff; /* MODIFIED: white */
+            color: #111827;
+            border: 1px solid #6b7280; /* MODIFIED: gray-500 for darker border */
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+        }
+        .player-input:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5); }
+        .round-details-row { display: none; }
+        .custom-checkbox { display: inline-flex; align-items: center; cursor: pointer; gap: 0.5rem; user-select: none; }
+        .custom-checkbox input[type="checkbox"] { display: none; }
+        .custom-checkbox .checkmark { display: inline-block; width: 1rem; height: 1rem; background-color: #d1d5db; /* MODIFIED: gray-300 */ border: 1px solid #9ca3af; /* MODIFIED: gray-400 */ border-radius: 0.25rem; position: relative; transition: background-color 0.2s; }
+        .custom-checkbox input[type="checkbox"]:checked + .checkmark { background-color: #22c55e; border-color: #16a34a; }
+        .custom-checkbox input[type="checkbox"]:disabled + .checkmark { background-color: #ec4899; border-color: #be185d; cursor: not-allowed; }
+        .custom-checkbox .checkmark::after { content: ""; position: absolute; display: none; left: 0.3rem; top: 0.1rem; width: 0.25rem; height: 0.5rem; border: solid white; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+        .custom-checkbox input[type="checkbox"]:checked + .checkmark::after { display: block; }
+        
+        /* --- NEW: Radio Button Styles --- */
+        .custom-radio { display: inline-flex; align-items: center; cursor: pointer; gap: 0.5rem; user-select: none; }
+        .custom-radio input[type="radio"] { display: none; }
+        .custom-radio .radiomark { display: inline-block; width: 1rem; height: 1rem; background-color: #e5e7eb; /* gray-200 */ border: 1px solid #d1d5db; /* gray-300 */ border-radius: 50%; position: relative; transition: background-color 0.2s; }
+        .custom-radio input[type="radio"]:checked + .radiomark { background-color: #22c55e; border-color: #16a34a; }
+        .custom-radio .radiomark::after { content: ""; position: absolute; display: none; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 0.5rem; height: 0.5rem; border-radius: 50%; background: #ffffff; }
+        .custom-radio input[type="radio"]:checked + .radiomark::after { display: block; }
+        /* --- END NEW --- */
+
+        #main-content.hidden { display: none; } /* MODIFICATION: Hide content for splash */
+
+        /* --- Dark Theme --- */
+        .dark body {
+            background-color: #000000;
+            color: #ffffff;
+        }
+        .dark .rounded-card {
+            background-color: #1a1a1a;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(255, 255, 255, 0.1);
+            border: none;
+        }
+        .dark input[type="text"], .dark input[type="number"], .dark select {
+            border: 1px solid #4a4a4a;
+            background-color: #2a2a2a;
+            color: #ffffff;
+        }
+        .dark input[type="text"]:focus, .dark input[type="number"]:focus, .dark select:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+        .dark input:disabled, .dark select:disabled {
+            background-color: #3a3a3a;
+            color: #9ca3af;
+            opacity: 0.7;
+        }
+        .dark input:read-only {
+            background-color: #374151; /* gray-700 */
+            color: #22c55e; /* green-500 */
+            border-color: #4b5563; /* gray-600 */
+        }
+        /* NEW: Static player name field in dark mode */
+        .dark .player-name-static {
+            background-color: #3a3a3a;
+            color: #d1d5db; /* gray-300 */
+            border: 1px solid #4a4a4a;
+        }
+        .dark .btn:disabled {
+             background-color: #4b5563;
+             opacity: 0.5;
+             color: #ffffff;
+        }
+        .dark .total-row {
+            background-color: #333333;
+        }
+        .dark .round-row {
+            background-color: #000000;
+        }
+        .dark .round-row:hover {
+            background-color: #2a2a2a;
+        }
+        .dark .custom-modal {
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+        .dark .modal-content {
+            background-color: #1a1a1a;
+            box-shadow: 0 4px 6px rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+        }
+        .dark .player-input {
+            background-color: #2a2a2a;
+            color: white;
+            border: 1px solid #4a4a4a;
+        }
+        .dark .player-input:focus {
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+        }
+        .dark .custom-checkbox .checkmark {
+            background-color: #4a4a4a;
+            border: 1px solid #6b7280;
+        }
+        .dark .custom-checkbox input[type="checkbox"]:checked + .checkmark {
+            background-color: #22c55e;
+            border-color: #16a34a;
+        }
+        .dark .custom-checkbox input[type="checkbox"]:disabled + .checkmark {
+            background-color: #ec4899;
+            border-color: #be185d;
+        }
+        .dark .custom-checkbox .checkmark::after {
+            border: solid white;
+            border-width: 0 2px 2px 0;
+        }
+
+        /* --- NEW: Dark Radio Button Styles --- */
+        .dark .custom-radio .radiomark { background-color: #4a4a4a; border: 1px solid #6b7280; }
+        .dark .custom-radio input[type="radio"]:checked + .radiomark { background-color: #22c55e; border-color: #16a34a; }
+        .dark .custom-radio .radiomark::after { background: white; }
+        /* --- END NEW --- */
+
+        /* --- Helper classes --- */
+        .text-color-dynamic {
+            color: #111827; /* gray-900 */
+        }
+        .dark .text-color-dynamic {
+            color: #ffffff;
+        }
+        .icon-color-dynamic {
+             color: #111827; /* gray-900 */
+        }
+        .dark .icon-color-dynamic {
+             color: #ffffff;
+        }
+        .icon-color-dynamic:hover {
+            color: #6b7280; /* gray-500 */
+        }
+        .dark .icon-color-dynamic:hover {
+            color: #9ca3af; /* gray-400 */
+        }
+        .settings-bg {
+             background-color: #f9fafb; /* gray-50 */
+        }
+        .dark .settings-bg {
+            background-color: #1f2937; /* gray-800 */
+        }
+        .penalty-label-color {
+            color: #4b5563; /* gray-600 */
+        }
+        .dark .penalty-label-color {
+            color: #9ca3af; /* gray-400 */
+        }
+        .modal-table-header {
+            background-color: #f9fafb; /* gray-50 */
+        }
+        .dark .modal-table-header {
+            background-color: #4a4a4a;
+        }
+        /* --- NEW: Radio Group BG Style --- */
+        .custom-radio-group-bg { background-color: #e5e7eb; /* gray-200 */ }
+        .dark .custom-radio-group-bg { background-color: #2a2a2a; /* My dark input bg */ }
+        /* --- END NEW --- */
+
+        /* --- NEW: Zippy Player Entry Styles --- */
+        /* MODIFICATION: Set light mode base style */
+        .player-entry-container {
+            border: 1px solid #e5e7eb; /* gray-200 */
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            background-color: #f9fafb; /* gray-50 */
+        }
+        /* MODIFICATION: Set dark mode to black */
+        .dark .player-entry-container {
+             background-color: #000000; /* Black */
+             border: 1px solid #4b5563; /* gray-600 */
+         }
+
+        .player-entry-row-1 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 1rem;
+            padding: 1rem;
+            border-bottom: 1px solid #e5e7eb; /* gray-200 */
+        }
+        .dark .player-entry-row-1 {
+             border-bottom: 1px solid #4b5563; /* gray-600 */
+         }
+        /* NEW: Static player name field */
+        .player-name-static {
+            border: 1px solid #6b7280;
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+            width: 100%;
+            background-color: #e5e7eb; /* gray-200 */
+            color: #374151; /* gray-700 */
+            font-weight: 500;
+        }
+
+        .player-entry-row-2 {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            padding: 1rem;
+            align-items: flex-end; /* MODIFICATION: Align items to bottom */
+        }
+        /* MODIFICATION: Remove input-group, use flex-col on wrapper */
+        .player-entry-row-2 .input-group-item {
+            display: flex;
+            flex-direction: column;
+        }
+        /* MODIFICATION: Center bonus number inputs */
+        .bonus-number-input {
+            width: 70px;
+            text-align: center;
+        }
+        
+        @media (max-width: 640px) {
+            .player-entry-row-1 {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div id="splash-screen" class="fixed top-0 left-0 w-full h-full bg-black flex justify-center items-center z-50 transition-opacity duration-500 ease-in-out">
+    <div id="splash-container" class="relative w-64 h-64 md:w-96 md:h-96">
+    </div>
+    <div class="absolute bottom-4 w-full text-center text-xs text-gray-500">
+        Copyright &copy; 2025 M. Tong and C. Hermann. All rights reserved.
+    </div>
+</div>
+
+<div id="main-content" class="hidden flex flex-col items-center justify-center min-h-screen p-4">
+
+    <div class="custom-modal" id="confirmModal">
+        <div class="modal-content">
+            <div class="modal-body">
+                <h3 id="modalMessage"></h3>
+            </div>
+            <div class="modal-footer">
+                <div class="btn-container">
+                    <button id="modalConfirmBtn" class="btn bg-red-500 hover:bg-red-600 text-white">Confirm</button>
+                    <button id="modalCancelBtn" class="btn bg-gray-300 hover:bg-gray-400 text-gray-800">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="custom-modal" id="settingsModal">
+        <div class="modal-content">
+             <div class="modal-body">
+                <div id="settings-section" class="p-4 settings-bg rounded-lg">
+                    <h2 class="text-lg font-semibold text-center mb-4">Player Names & Settings</h2>
+                    <div id="player-inputs-container" class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+                        </div>
+
+                    <h3 class="text-lg font-semibold text-center mb-4">Events Info Table</h3>
+                    <div class="table-container mb-6">
+                        <table class="styled-table w-full text-sm">
+                            <thead>
+                                <tr class="modal-table-header">
+                                    <th>Event</th>
+                                    <th>Event Points</th>
+                                    <th>Win-First</th>
+                                    <th>Win-Second</th>
+                                    <th>Win-Third(Base)</th>
+                                    <th>No-Win</th>
+                                    <th>Ignore-Order</th>
+                                </tr>
+                            </thead>
+                            <tbody id="events-settings-table">
+                                </tbody>
+                        </table>
+                    </div>
+
+                    <h3 class="text-lg font-semibold text-center mb-4">Bonus Info Table</h3>
+                     <div class="table-container">
+                        <table class="styled-table w-full text-sm">
+                            <thead>
+                                <tr class="modal-table-header">
+                                    <th>Combination</th>
+                                    <th>Bonus Points</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bonus-settings-table">
+                                </tbody>
+                        </table>
+                    </div>
+
+                    <div class="mt-6">
+                        <h3 class="text-sm font-medium penalty-label-color mb-2 text-center">Theme</h3>
+                        <div class="flex justify-center gap-6 p-3 custom-radio-group-bg rounded-lg">
+                            <label class="custom-radio">
+                                <input type="radio" id="themeDark" name="theme" value="dark" checked>
+                                <span class="radiomark"></span>
+                                <span>Dark</span>
+                            </label>
+                            <label class="custom-radio">
+                                <input type="radio" id="themeLight" name="theme" value="light">
+                                <span class="radiomark"></span>
+                                <span>Light</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+             </div>
+             <div class="modal-footer">
+                <div class="btn-container">
+                    <button id="closeSettingsBtn" class="btn btn-gray">Close</button>
+                </div>
+             </div>
+        </div>
+    </div>
+
+    <div class="container rounded-card relative">
+         <div class="absolute top-4 right-4 flex items-center gap-4 z-10">
+            <svg id="settingsBtn" xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 icon-color-dynamic cursor-pointer transition" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-bold text-center mb-6 text-color-dynamic flex items-center justify-center gap-4">
+            <img id="title-icon" src="zippy.png" alt="Zippy Icon" class="h-12 w-12 rounded-full cursor-pointer">
+            <span>My-T Scorer – Zippy Scorer</span>
+        </h1>
+
+        <div class="table-container">
+            <table class="styled-table rounded-lg overflow-hidden">
+                <thead id="scoreTableHead">
+                    </thead>
+                <tbody id="scoreTableBody" class="divide-y">
+                    </tbody>
+                <tfoot class="font-bold" id="scoreTableFoot">
+                    </tfoot>
+            </table>
+        </div>
+
+        <div class="mt-8 flex justify-center flex-wrap gap-4">
+            <button id="addRoundBtn" class="btn btn-green">Add New Round</button>
+            <button id="resetBtn" class="btn btn-red">Reset All</button>
+            </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- Splash Screen Logic ---
+        const splashScreen = document.getElementById('splash-screen');
+        const mainContent = document.getElementById('main-content');
+        const splashContainer = document.getElementById('splash-container');
+
+        // 1. Create initial image halves immediately
+        const leftHalf = document.createElement('div');
+        leftHalf.className = 'absolute top-0 left-0 w-1/2 h-full bg-cover bg-no-repeat bg-left transition-transform duration-700 ease-in';
+        leftHalf.style.backgroundImage = "url('zippy.png')";
+
+        const rightHalf = document.createElement('div');
+        rightHalf.className = 'absolute top-0 right-0 w-1/2 h-full bg-cover bg-no-repeat bg-right transition-transform duration-700 ease-in';
+        rightHalf.style.backgroundImage = "url('zippy.png')";
+
+        splashContainer.appendChild(leftHalf);
+        splashContainer.appendChild(rightHalf);
+
+        // 2. Wait 2 seconds
+        setTimeout(() => {
+            // 3. Trigger split animation
+            leftHalf.style.transform = 'translateX(-100%)';
+            rightHalf.style.transform = 'translateX(100%)';
+
+            // 4. Listen for animation to end on one of the halves
+            rightHalf.addEventListener('transitionend', () => {
+                // 5. Fade out the entire splash screen
+                splashScreen.style.opacity = '0';
+
+                // 6. When fade out is done, hide splash screen and show main content
+                splashScreen.addEventListener('transitionend', () => {
+                    splashScreen.style.display = 'none';
+                    mainContent.classList.remove('hidden');
+                }, { once: true });
+            }, { once: true });
+        }, 2000); // 2-second delay before splitting
+
+        // --- NEW: Zippy Scorer State Variables ---
+
+        //
+        let players = ['P1', 'P2', 'P3', 'P4'];
+        const playerIds = ['p1', 'p2', 'p3', 'p4'];
+        let roundCount = 0;
+
+        //
+        let eventSettings = {
+            'hu-self-draw': { name: "Hu - Self Draw", points: 3, 'win-first': 3, 'win-second': 2, 'win-third': 1, 'no-win': 0, 'ignore-order': 1 },
+            'hu-discard':   { name: "Hu - Discard", points: 2, 'win-first': 1, 'win-second': 1, 'win-third': 1, 'no-win': 0, 'ignore-order': 1 },
+            'no-hu-ready':  { name: "No-Hu - Ready", points: 1, 'win-first': 3, 'win-second': 2, 'win-third': 1, 'no-win': 0, 'ignore-order': 1 },
+            'no-hu-not-ready': { name: "No-Hu - Not Ready", points: 0, 'win-first': 0, 'win-second': 0, 'win-third': 0, 'no-win': 0, 'ignore-order': 0 }
+        };
+        const eventKeys = ['hu-self-draw', 'hu-discard', 'no-hu-ready', 'no-hu-not-ready'];
+
+        //
+        const winOrderMap = {
+            'win-first': "Win-First",
+            'win-second': "Win-Second",
+            'win-third': "Win-Third(Base)",
+            'no-win': "No-Win",
+            'ignore-order': "Ignore-Order"
+        };
+        const winOrderKeys = ['win-first', 'win-second', 'win-third', 'no-win', 'ignore-order'];
+
+
+        //
+        let bonusSettings = {
+            'kong': { name: "Kong", points: 2, description: "4 identical tiles in kong (1 for each); MUST be dclared." },
+            'root': { name: "Root (across > 1 sets)", points: 2, description: "4 identical tiles in two or more sets (1 for each). Do not double count Kongs as Roots." },
+            'all-pungs': { name: "All Pungs", points: 4, description: "Hand with four pungs or kongs and a pair" },
+            'full-flush': { name: "Full Flush", points: 8, description: "All tiles in the hand are one suit only" },
+            'seven-pairs': { name: "Seven Pairs", points: 8, description: "Seven pairs in hand" }
+        };
+        const bonusKeys = ['kong', 'root', 'all-pungs', 'full-flush', 'seven-pairs'];
+        //
+        const bonusInputKeys = ['kong', 'root']; 
+        //
+        const bonusCheckboxKeys = ['all-pungs', 'full-flush', 'seven-pairs'];
+
+        // --- DOM Elements ---
+        const playerInputsContainer = document.getElementById('player-inputs-container');
+        const scoreTableBody = document.getElementById('scoreTableBody');
+        const scoreTableHead = document.getElementById('scoreTableHead');
+        const scoreTableFoot = document.getElementById('scoreTableFoot');
+        const addRoundBtn = document.getElementById('addRoundBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const confirmModal = document.getElementById('confirmModal');
+        const modalMessage = document.getElementById('modalMessage');
+        const modalConfirmBtn = document.getElementById('modalConfirmBtn');
+        const modalCancelBtn = document.getElementById('modalCancelBtn');
+        const settingsBtn = document.getElementById('settingsBtn');
+        const settingsModal = document.getElementById('settingsModal');
+        const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+        const eventsSettingsTable = document.getElementById('events-settings-table');
+        const bonusSettingsTable = document.getElementById('bonus-settings-table');
+        const titleIcon = document.getElementById('title-icon'); // NEW: Icon
+
+        // --- UI Rendering Functions ---
+
+        /**
+         * Renders the player name input fields and sets up their event listeners.
+         *
+         */
+        function renderPlayerInputs() {
+            playerInputsContainer.innerHTML = '';
+            players.forEach((name, index) => {
+                const div = document.createElement('div');
+                div.classList.add('flex', 'flex-col', 'items-center');
+                const label = document.createElement('label');
+                label.for = `player-name-${index}`;
+                label.textContent = `Player ${index + 1}`;
+                label.classList.add('text-sm', 'font-medium', 'penalty-label-color', 'mb-1');
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.id = `player-name-${index}`;
+                input.value = name;
+                input.classList.add('player-input', 'w-full', 'text-center');
+                input.addEventListener('change', (e) => {
+                    players[index] = e.target.value.trim() || `P${index + 1}`;
+                    renderTableHeaders();
+                    updateAllRoundPlayerNames();
+                });
+                div.appendChild(label);
+                div.appendChild(input);
+                playerInputsContainer.appendChild(div);
+            });
+        }
+
+        /**
+         * Renders the table header and footer with the current player names.
+         */
+        function renderTableHeaders() {
+            // Re-render table head
+            const headerRow = document.createElement('tr');
+            headerRow.innerHTML = `
+                <th class="py-4 px-6 w-1/12">Round</th>
+                ${players.map((name) => `<th class="py-4 px-6 w-2/12">${name}</th>`).join('')}
+                <th class="py-4 px-6 w-1/12">Round Total</th>
+            `;
+            scoreTableHead.innerHTML = '';
+            scoreTableHead.appendChild(headerRow);
+
+            // Re-render table foot
+            const footerRow = document.createElement('tr');
+            footerRow.classList.add('total-row');
+            footerRow.innerHTML = `
+                <td class="py-4 px-6">Total</td>
+                ${playerIds.map(pId => `<td id="grand-total-${pId}" class="py-4 px-6">0</td>`).join('')}
+                <td id="grand-total-all" class="py-4 px-6">0</td>
+            `;
+            scoreTableFoot.innerHTML = '';
+            scoreTableFoot.appendChild(footerRow);
+        }
+
+        /**
+         * Updates player names in all existing round player-entry rows.
+         */
+        function updateAllRoundPlayerNames() {
+            // MODIFICATION: Update the static player name text
+            document.querySelectorAll('.player-name-static').forEach(div => {
+                const playerIndex = div.dataset.playerIndex;
+                if (playerIndex) {
+                    div.textContent = players[playerIndex];
+                }
+            });
+        }
+
+        // --- NEW: Settings Modal Functions ---
+
+        /**
+         * Populates the settings tables with values from the state objects.
+         *
+         */
+        function initializeSettingsTables() {
+            // 1. Render Events Table
+            eventsSettingsTable.innerHTML = '';
+            eventKeys.forEach(key => {
+                const event = eventSettings[key];
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${event.name}</td>
+                    <td><input type="number" class="settings-input" data-key="${key}" data-field="points" value="${event.points}"></td>
+                    <td><input type="number" class="settings-input" data-key="${key}" data-field="win-first" value="${event['win-first']}"></td>
+                    <td><input type="number" class="settings-input" data-key="${key}" data-field="win-second" value="${event['win-second']}"></td>
+                    <td><input type="number" class="settings-input" data-key="${key}" data-field="win-third" value="${event['win-third']}"></td>
+                    <td><input type="number" class="settings-input" data-key="${key}" data-field="no-win" value="${event['no-win']}"></td>
+                    <td><input type="number" class="settings-input" data-key="${key}" data-field="ignore-order" value="${event['ignore-order']}"></td>
+                `;
+                eventsSettingsTable.appendChild(row);
+            });
+
+            // 2. Render Bonus Table
+            bonusSettingsTable.innerHTML = '';
+            bonusKeys.forEach(key => {
+                const bonus = bonusSettings[key];
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="text-left pl-4">${bonus.name}</td>
+                    <td><input type="number" class="settings-input" data-key="${key}" data-field="points" value="${bonus.points}"></td>
+                    <td class="text-left pl-4">${bonus.description}</td>
+                `;
+                bonusSettingsTable.appendChild(row);
+            });
+
+            // 3. Add event listeners
+            settingsModal.querySelectorAll('.settings-input').forEach(input => {
+                input.addEventListener('change', () => {
+                    updateSettingsFromDOM();
+                    recalculateAllRounds(); // Recalculate all scores
+                });
+            });
+        }
+
+        /**
+         * Reads values from settings inputs and updates the state objects.
+         */
+        function updateSettingsFromDOM() {
+            // 1. Update eventSettings
+            eventsSettingsTable.querySelectorAll('.settings-input').forEach(input => {
+                const key = input.dataset.key;
+                const field = input.dataset.field;
+                eventSettings[key][field] = parseInt(input.value) || 0;
+            });
+
+            // 2. Update bonusSettings
+            bonusSettingsTable.querySelectorAll('.settings-input').forEach(input => {
+                const key = input.dataset.key;
+                const field = input.dataset.field;
+                bonusSettings[key][field] = parseInt(input.value) || 0;
+            });
+        }
+
+        /**
+         * Recalculates all player hand values and round totals.
+         */
+        function recalculateAllRounds() {
+            document.querySelectorAll('.player-entry-container').forEach(entryDiv => {
+                updatePlayerHandValue(entryDiv);
+            });
+            // Update all round totals and grand totals
+            for (let i = 1; i <= roundCount; i++) {
+                updateRoundTotals(i);
+            }
+        }
+
+        // --- Core Logic Functions ---
+
+        /**
+         * Shows a custom confirmation modal.
+         */
+        function showConfirmModal(message) {
+            return new Promise(resolve => {
+                modalMessage.textContent = message;
+                confirmModal.style.display = 'flex';
+
+                modalConfirmBtn.onclick = () => {
+                    confirmModal.style.display = 'none';
+                    resolve(true);
+                };
+
+                modalCancelBtn.onclick = () => {
+                    confirmModal.style.display = 'none';
+                    resolve(false);
+                };
+            });
+        }
+
+        /**
+         * Adds a new round row to the main table.
+         *
+         */
+        function addRoundRow() {
+            roundCount++;
+            const currentRoundId = roundCount;
+            const newRoundRow = document.createElement('tr');
+            newRoundRow.id = `round-summary-${currentRoundId}`;
+            newRoundRow.classList.add('round-row');
+            newRoundRow.dataset.roundId = currentRoundId;
+
+            const roundCell = document.createElement('td');
+            const roundButton = document.createElement('div');
+            roundButton.textContent = currentRoundId;
+            roundButton.classList.add('round-btn');
+            roundCell.appendChild(roundButton);
+            newRoundRow.appendChild(roundCell);
+
+            // Add score cells for each player
+            playerIds.forEach(playerId => {
+                const scoreCell = document.createElement('td');
+                scoreCell.textContent = '0';
+                scoreCell.id = `${playerId}-round-${currentRoundId}-summary`;
+                newRoundRow.appendChild(scoreCell);
+            });
+
+            // Add round total cell
+            const roundTotalCell = document.createElement('td');
+            roundTotalCell.textContent = '0';
+            roundTotalCell.id = `round-${currentRoundId}-total-summary`;
+            newRoundRow.appendChild(roundTotalCell);
+
+            scoreTableBody.appendChild(newRoundRow);
+
+            // Create the hidden detail row
+            const hiddenDetailRow = document.createElement('tr');
+            hiddenDetailRow.id = `round-details-${currentRoundId}`;
+            hiddenDetailRow.classList.add('round-details-row');
+
+            const detailCell = document.createElement('td');
+            detailCell.colSpan = players.length + 2; // P1, P2, P3, P4, Round, Round Total
+            const detailContainer = document.createElement('div');
+            detailContainer.classList.add('p-4');
+            
+            //
+            detailContainer.innerHTML = `
+                <h4 class="text-lg font-semibold text-center mb-4">Round ${currentRoundId} Details</h4>
+                <div id="player-entries-${currentRoundId}">
+                    </div>
+                <div class="flex justify-center mt-4">
+                    <button class="delete-round-btn btn btn-red text-sm" data-round-id="${currentRoundId}">Delete Round</button>
+                </div>
+            `;
+            detailCell.appendChild(detailContainer);
+            hiddenDetailRow.appendChild(detailCell);
+            scoreTableBody.appendChild(hiddenDetailRow);
+
+            // Create the 4 player entry sections
+            const entriesContainer = detailContainer.querySelector(`#player-entries-${currentRoundId}`);
+            playerIds.forEach((pId, index) => {
+                createPlayerEntryRow(entriesContainer, currentRoundId, pId, index);
+            });
+
+            updateRoundTotals(currentRoundId);
+        }
+        
+        /**
+         * Creates the two-row UI for a single player in a round.
+         *
+         */
+        function createPlayerEntryRow(container, roundId, playerId, playerIndex) {
+            const entryDiv = document.createElement('div');
+            entryDiv.id = `player-entry-${roundId}-${playerId}`;
+            entryDiv.classList.add('player-entry-container');
+            entryDiv.dataset.roundId = roundId;
+            entryDiv.dataset.playerId = playerId;
+
+            // --- Row 1: Player, Event, Win Order, Hand Value ---
+            const row1 = document.createElement('div');
+            row1.classList.add('player-entry-row-1');
+            
+            // MODIFICATION: Player static text
+            row1.innerHTML += `
+                <div class="flex flex-col">
+                    <label class="text-sm font-medium penalty-label-color mb-1">Player</label>
+                    <div class="player-name-static" data-player-index="${playerIndex}">${players[playerIndex]}</div>
+                </div>
+            `;
+            // MODIFICATION: Event Dropdown with "Hu - Self Draw" as default
+            const eventFieldId = `event-${roundId}-${playerId}`;
+            row1.innerHTML += `
+                <div class="flex flex-col">
+                    <label for="${eventFieldId}" class="text-sm font-medium penalty-label-color mb-1">Event</label>
+                    <select id="${eventFieldId}" class="player-entry-input" data-field="event">
+                        ${eventKeys.map(key => `<option value="${key}" ${key === 'hu-self-draw' ? 'selected' : ''}>${eventSettings[key].name}</option>`).join('')}
+                    </select>
+                </div>
+            `;
+            // MODIFICATION: Win Order Dropdown with "No-Win" as default
+            const winOrderFieldId = `win-order-${roundId}-${playerId}`;
+            row1.innerHTML += `
+                <div class="flex flex-col">
+                    <label for="${winOrderFieldId}" class="text-sm font-medium penalty-label-color mb-1">Win Order</label>
+                    <select id="${winOrderFieldId}" class="player-entry-input" data-field="win-order">
+                        ${winOrderKeys.map(key => `<option value="${key}" ${key === 'no-win' ? 'selected' : ''}>${winOrderMap[key]}</option>`).join('')}
+                    </select>
+                </div>
+            `;
+            // Hand Value Field
+            const handValueFieldId = `hand-value-${roundId}-${playerId}`;
+            row1.innerHTML += `
+                <div class="flex flex-col">
+                    <label for="${handValueFieldId}" class="text-sm font-medium penalty-label-color mb-1">Hand Value</label>
+                    <input id="${handValueFieldId}" type="number" class="hand-value-output" value="0" readonly>
+                </div>
+            `;
+
+            // --- Row 2: Bonus Hands ---
+            const row2 = document.createElement('div');
+            row2.classList.add('player-entry-row-2');
+            
+            // MODIFICATION: Bonus Inputs (Kong, Root) with labels above
+            bonusInputKeys.forEach(key => {
+                const bonusFieldId = `${key}-${roundId}-${playerId}`;
+                row2.innerHTML += `
+                    <div class="input-group-item">
+                        <label for="${bonusFieldId}" class="text-sm font-medium penalty-label-color mb-1">${bonusSettings[key].name}</label>
+                        <input id="${bonusFieldId}" type="number" min="0" max="4" value="0" class="player-entry-input bonus-number-input" data-field="${key}">
+                    </div>
+                `;
+            });
+            // MODIFICATION: Bonus Checkboxes with labels above
+            bonusCheckboxKeys.forEach(key => {
+                const bonusFieldId = `${key}-${roundId}-${playerId}`;
+                row2.innerHTML += `
+                    <div class="input-group-item">
+                        <label for="${bonusFieldId}" class="text-sm font-medium penalty-label-color mb-1">${bonusSettings[key].name}</label>
+                        <label class="custom-checkbox" style="height: 42px;"> <input id="${bonusFieldId}" type="checkbox" class="player-entry-input" data-field="${key}">
+                            <span class="checkmark"></span>
+                            </label>
+                    </div>
+                `;
+            });
+
+            entryDiv.appendChild(row1);
+            entryDiv.appendChild(row2);
+            container.appendChild(entryDiv);
+
+            // Add event listeners to all inputs in this entry
+            entryDiv.querySelectorAll('.player-entry-input').forEach(input => {
+                input.addEventListener('change', () => {
+                    updatePlayerHandValue(entryDiv);
+                    updateRoundTotals(roundId);
+                });
+            });
+            
+            //
+            updatePlayerHandValue(entryDiv);
+        }
+
+        /**
+         * Calculates and updates a single player's Hand Value field.
+         *
+         */
+        function updatePlayerHandValue(entryDiv) {
+            const eventKey = entryDiv.querySelector('[data-field="event"]').value;
+            const winOrderKey = entryDiv.querySelector('[data-field="win-order"]').value;
+            
+            const eventConfig = eventSettings[eventKey];
+            const eventPoints = eventConfig.points;
+            const winOrderValue = eventConfig[winOrderKey];
+            
+            let bonusPoints = 0;
+            // Add points from number inputs
+            bonusInputKeys.forEach(key => {
+                const value = parseInt(entryDiv.querySelector(`[data-field="${key}"]`).value) || 0;
+                bonusPoints += value * bonusSettings[key].points;
+            });
+            // Add points from checkboxes
+            bonusCheckboxKeys.forEach(key => {
+                const isChecked = entryDiv.querySelector(`[data-field="${key}"]`).checked;
+                if (isChecked) {
+                    bonusPoints += bonusSettings[key].points;
+                }
+            });
+
+            // Calculate total Hand Value
+            const totalHandValue = (eventPoints + bonusPoints) * winOrderValue;
+            
+            // Update the output field
+            entryDiv.querySelector('.hand-value-output').value = totalHandValue;
+        }
+
+        /**
+         * Updates the round summary row and grand totals.
+         */
+        function updateRoundTotals(roundId) {
+            let roundTotal = 0;
+            const playerTotals = {};
+            
+            playerIds.forEach(pId => {
+                const handValueInput = document.querySelector(`#player-entry-${roundId}-${pId} .hand-value-output`);
+                const value = parseInt(handValueInput.value) || 0;
+                
+                playerTotals[pId] = value;
+                roundTotal += value;
+
+                // Update the summary row cell for this player
+                const summaryCell = document.getElementById(`${pId}-round-${roundId}-summary`);
+                if (summaryCell) summaryCell.textContent = value;
+            });
+
+            // Update the round total cell
+            // *** BUG FIX HERE ***
+            const roundTotalCell = document.getElementById(`round-${roundId}-total-summary`);
+            if (roundTotalCell) roundTotalCell.textContent = roundTotal;
+
+            updateGrandTotals();
+        }
+
+        /**
+         * Recalculates the grand total footer.
+         */
+        function updateGrandTotals() {
+            let grandTotalAll = 0;
+            
+            playerIds.forEach(pId => {
+                let playerGrandTotal = 0;
+                document.querySelectorAll(`[id^="${pId}-round-"][id$="-summary"]`).forEach(cell => {
+                    playerGrandTotal += parseInt(cell.textContent) || 0;
+                });
+                
+                document.getElementById(`grand-total-${pId}`).textContent = playerGrandTotal;
+                grandTotalAll += playerGrandTotal;
+            });
+            
+            document.getElementById('grand-total-all').textContent = grandTotalAll;
+        }
+
+        /**
+         * Sets up event listeners for all dynamic elements.
+         */
+        function setupEventListeners() {
+            // --- NEW: Icon Spin Listeners ---
+            if (titleIcon) {
+                const spinFunction = (e) => {
+                    e.preventDefault(); // Prevent potential side-effects on touch
+                    // Prevent re-spinning if already spinning
+                    if (titleIcon.classList.contains('spin-animation')) {
+                        return;
+                    }
+                    //
+                    titleIcon.classList.add('spin-animation');
+
+                    // Add a one-time listener to remove the class when the animation finishes
+                    titleIcon.addEventListener('animationend', () => {
+                        titleIcon.classList.remove('spin-animation');
+                    }, { once: true });
+                };
+                // Add listeners for both mouse click and touch start
+                titleIcon.addEventListener('click', spinFunction);
+                titleIcon.addEventListener('touchstart', spinFunction);
+            }
+            // --- END NEW Listeners ---
+
+            scoreTableBody.addEventListener('click', async (event) => {
+                const target = event.target;
+
+                // Toggle round details
+                const roundRow = target.closest('.round-row');
+                if (roundRow) {
+                    const roundId = parseInt(roundRow.dataset.roundId);
+                    const detailsRow = document.getElementById(`round-details-${roundId}`);
+                    if (detailsRow) {
+                        detailsRow.style.display = detailsRow.style.display === 'table-row' ? 'none' : 'table-row';
+                    }
+                }
+
+                // Delete Round
+                if (target.classList.contains('delete-round-btn')) {
+                    const confirmed = await showConfirmModal('Are you sure you want to delete this round? This cannot be undone.');
+                    if (confirmed) {
+                        const roundIdToDelete = parseInt(target.dataset.roundId);
+                        const roundSummaryRow = document.getElementById(`round-summary-${roundIdToDelete}`);
+                        const roundDetailsRow = document.getElementById(`round-details-${roundIdToDelete}`);
+
+                        if (roundSummaryRow) roundSummaryRow.remove();
+                        if (roundDetailsRow) roundDetailsRow.remove();
+
+                        // Re-index remaining rounds
+                        const remainingRounds = document.querySelectorAll('.round-row');
+                        roundCount = 0;
+                        remainingRounds.forEach((row) => {
+                            roundCount++;
+                            const oldId = row.dataset.roundId;
+                            const newId = roundCount;
+                            
+                            if (oldId == newId) return; // No change needed
+
+                            row.id = `round-summary-${newId}`;
+                            row.dataset.roundId = newId;
+                            row.querySelector('.round-btn').textContent = newId;
+
+                            // Update summary cell IDs
+                            playerIds.forEach(pId => {
+                                const cell = document.getElementById(`${pId}-round-${oldId}-summary`);
+                                if (cell) cell.id = `${pId}-round-${newId}-summary`;
+                            });
+                             document.getElementById(`round-${oldId}-total-summary`).id = `round-${newId}-total-summary`;
+
+
+                            // Update details row and its content
+                            const detailsRow = document.getElementById(`round-details-${oldId}`);
+                            if (detailsRow) {
+                                detailsRow.id = `round-details-${newId}`;
+                                detailsRow.querySelector('h4').textContent = `Round ${newId} Details`;
+
+                                detailsRow.querySelectorAll('[id]').forEach(el => {
+                                    el.id = el.id.replace(`-${oldId}`, `-${newId}`).replace(`-${oldId}-`, `-${newId}-`);
+                                });
+                                detailsRow.querySelectorAll('[for]').forEach(el => {
+                                    el.htmlFor = el.htmlFor.replace(`-${oldId}`, `-${newId}`).replace(`-${oldId}-`, `-${newId}-`);
+                                });
+                                detailsRow.querySelectorAll('[data-round-id]').forEach(el => {
+                                    el.dataset.roundId = newId;
+                                });
+                            }
+                        });
+                        updateGrandTotals();
+                    }
+                }
+            });
+
+            addRoundBtn.addEventListener('click', () => {
+                // Close all currently open round detail rows
+                document.querySelectorAll('.round-details-row').forEach(row => {
+                    row.style.display = 'none';
+                });
+                // Add the new round
+                addRoundRow();
+                // Open the new round's details
+                const newDetailRow = document.getElementById(`round-details-${roundCount}`);
+                if (newDetailRow) {
+                    newDetailRow.style.display = 'table-row';
+                }
+            });
+
+            resetBtn.addEventListener('click', async () => {
+                const confirmed = await showConfirmModal('Are you sure you want to reset all scores and rounds? This cannot be undone.');
+                if (confirmed) {
+                    scoreTableBody.innerHTML = '';
+                    roundCount = 0;
+                    players = ['P1', 'P2', 'P3', 'P4'];
+                    renderPlayerInputs();
+                    renderTableHeaders();
+                    // Reset settings to default (by re-initializing the tables)
+                    initializeSettingsTables();
+                    addRoundRow();
+                }
+            });
+
+            settingsBtn.addEventListener('click', () => {
+                settingsModal.style.display = 'flex';
+            });
+
+            closeSettingsBtn.addEventListener('click', () => {
+                settingsModal.style.display = 'none';
+            });
+
+            // --- NEW: Theme Toggle Listeners ---
+            document.getElementById('themeDark').addEventListener('change', (e) => {
+                if (e.target.checked) {
+                    document.getElementById('html-tag').classList.add('dark');
+                }
+            });
+            document.getElementById('themeLight').addEventListener('change', (e) => {
+                if (e.target.checked) {
+                    document.getElementById('html-tag').classList.remove('dark');
+                }
+            });
+            // --- END NEW ---
+        }
+
+        // Initial setup
+        function initialize() {
+            renderPlayerInputs();
+            renderTableHeaders();
+            initializeSettingsTables(); // NEW
+            setupEventListeners();
+            addRoundRow();
+        }
+
+        initialize();
+    });
+</script>
+</body>
+</html>
