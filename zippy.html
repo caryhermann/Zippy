@@ -354,7 +354,7 @@
                                     <th>Event Points</th>
                                     <th>Win-First</th>
                                     <th>Win-Second</th>
-                                    <th>Win-Third(Base)</th>
+                                    <th>Win-Third</th>
                                     <th>No-Win</th>
                                     <th>Ignore-Order</th>
                                 </tr>
@@ -413,7 +413,7 @@
         </div>
         <h1 class="text-2xl sm:text-3xl font-bold text-center mb-6 text-color-dynamic flex items-center justify-center gap-4">
             <img id="title-icon" src="zippy.png" alt="Zippy Icon" class="h-12 w-12 rounded-full cursor-pointer">
-            <span>My-T Scorer – Zippy Scorer</span>
+            <span>My-T Zippy Sichuan Score</span>
         </h1>
 
         <div class="table-container">
@@ -441,7 +441,7 @@
         const mainContent = document.getElementById('main-content');
         const splashContainer = document.getElementById('splash-container');
 
-        // 1. Create initial image halves immediately
+        // 1. Create initial image halves immediately (match classic.html behavior)
         const leftHalf = document.createElement('div');
         leftHalf.className = 'absolute top-0 left-0 w-1/2 h-full bg-cover bg-no-repeat bg-left transition-transform duration-700 ease-in';
         leftHalf.style.backgroundImage = "url('zippy.png')";
@@ -503,9 +503,9 @@
         let bonusSettings = {
             'kong': { name: "Kong", points: 2, description: "4 identical tiles in kong (1 for each); MUST be dclared." },
             'root': { name: "Root (across > 1 sets)", points: 2, description: "4 identical tiles in two or more sets (1 for each). Do not double count Kongs as Roots." },
-            'all-pungs': { name: "All Pungs", points: 4, description: "Hand with four pungs or kongs and a pair" },
-            'full-flush': { name: "Full Flush", points: 8, description: "All tiles in the hand are one suit only" },
-            'seven-pairs': { name: "Seven Pairs", points: 8, description: "Seven pairs in hand" }
+            'all-pungs': { name: "All Pungs", points: 2, description: "Hand with four pungs or kongs and a pair" },
+            'full-flush': { name: "Full Flush", points: 4, description: "All tiles in the hand are one suit only" },
+            'seven-pairs': { name: "Seven Pairs", points: 7, description: "Seven pairs in hand" }
         };
         const bonusKeys = ['kong', 'root', 'all-pungs', 'full-flush', 'seven-pairs'];
         //
@@ -571,7 +571,6 @@
             headerRow.innerHTML = `
                 <th class="py-4 px-6 w-1/12">Round</th>
                 ${players.map((name) => `<th class="py-4 px-6 w-2/12">${name}</th>`).join('')}
-                <th class="py-4 px-6 w-1/12">Round Total</th>
             `;
             scoreTableHead.innerHTML = '';
             scoreTableHead.appendChild(headerRow);
@@ -582,7 +581,6 @@
             footerRow.innerHTML = `
                 <td class="py-4 px-6">Total</td>
                 ${playerIds.map(pId => `<td id="grand-total-${pId}" class="py-4 px-6">0</td>`).join('')}
-                <td id="grand-total-all" class="py-4 px-6">0</td>
             `;
             scoreTableFoot.innerHTML = '';
             scoreTableFoot.appendChild(footerRow);
@@ -620,7 +618,7 @@
                     <td><input type="number" class="settings-input" data-key="${key}" data-field="win-second" value="${event['win-second']}"></td>
                     <td><input type="number" class="settings-input" data-key="${key}" data-field="win-third" value="${event['win-third']}"></td>
                     <td><input type="number" class="settings-input" data-key="${key}" data-field="no-win" value="${event['no-win']}"></td>
-                    <td><input type="number" class="settings-input" data-key="${key}" data-field="ignore-order" value="${event['ignore-order']}"></td>
+                    <td><input type="number" class="settings-input" data-key="${key}" data-field="ignore-order" value="${event['ignore-order']}" disabled></td>
                 `;
                 eventsSettingsTable.appendChild(row);
             });
@@ -728,11 +726,7 @@
                 newRoundRow.appendChild(scoreCell);
             });
 
-            // Add round total cell
-            const roundTotalCell = document.createElement('td');
-            roundTotalCell.textContent = '0';
-            roundTotalCell.id = `round-${currentRoundId}-total-summary`;
-            newRoundRow.appendChild(roundTotalCell);
+            // (round total column removed)
 
             scoreTableBody.appendChild(newRoundRow);
 
@@ -742,7 +736,7 @@
             hiddenDetailRow.classList.add('round-details-row');
 
             const detailCell = document.createElement('td');
-            detailCell.colSpan = players.length + 2; // P1, P2, P3, P4, Round, Round Total
+            detailCell.colSpan = players.length + 1; // Round + players
             const detailContainer = document.createElement('div');
             detailContainer.classList.add('p-4');
             
@@ -810,12 +804,12 @@
                     </select>
                 </div>
             `;
-            // Hand Value Field
+            // Hand Value Field (center justified)
             const handValueFieldId = `hand-value-${roundId}-${playerId}`;
             row1.innerHTML += `
                 <div class="flex flex-col">
                     <label for="${handValueFieldId}" class="text-sm font-medium penalty-label-color mb-1">Hand Value</label>
-                    <input id="${handValueFieldId}" type="number" class="hand-value-output" value="0" readonly>
+                    <input id="${handValueFieldId}" type="number" class="hand-value-output" value="0" readonly style="text-align:center;">
                 </div>
             `;
 
@@ -823,13 +817,14 @@
             const row2 = document.createElement('div');
             row2.classList.add('player-entry-row-2');
             
-            // MODIFICATION: Bonus Inputs (Kong, Root) with labels above
+            // MODIFICATION: Bonus Inputs (Kong, Root) as dropdowns 0-4
             bonusInputKeys.forEach(key => {
                 const bonusFieldId = `${key}-${roundId}-${playerId}`;
+                const options = [0,1,2,3,4].map(n => `<option value="${n}" ${n===0? 'selected': ''}>${n}</option>`).join('');
                 row2.innerHTML += `
                     <div class="input-group-item">
                         <label for="${bonusFieldId}" class="text-sm font-medium penalty-label-color mb-1">${bonusSettings[key].name}</label>
-                        <input id="${bonusFieldId}" type="number" min="0" max="4" value="0" class="player-entry-input bonus-number-input" data-field="${key}">
+                        <select id="${bonusFieldId}" class="player-entry-input bonus-number-select" data-field="${key}">${options}</select>
                     </div>
                 `;
             });
@@ -877,7 +872,8 @@
             let bonusPoints = 0;
             // Add points from number inputs
             bonusInputKeys.forEach(key => {
-                const value = parseInt(entryDiv.querySelector(`[data-field="${key}"]`).value) || 0;
+                const el = entryDiv.querySelector(`[data-field="${key}"]`);
+                const value = parseInt(el.value) || 0;
                 bonusPoints += value * bonusSettings[key].points;
             });
             // Add points from checkboxes
@@ -914,10 +910,7 @@
                 if (summaryCell) summaryCell.textContent = value;
             });
 
-            // Update the round total cell
-            // *** BUG FIX HERE ***
-            const roundTotalCell = document.getElementById(`round-${roundId}-total-summary`);
-            if (roundTotalCell) roundTotalCell.textContent = roundTotal;
+            // (round total column removed)
 
             updateGrandTotals();
         }
@@ -938,7 +931,7 @@
                 grandTotalAll += playerGrandTotal;
             });
             
-            document.getElementById('grand-total-all').textContent = grandTotalAll;
+            // grand-total-all removed
         }
 
         /**
@@ -1010,7 +1003,7 @@
                                 const cell = document.getElementById(`${pId}-round-${oldId}-summary`);
                                 if (cell) cell.id = `${pId}-round-${newId}-summary`;
                             });
-                             document.getElementById(`round-${oldId}-total-summary`).id = `round-${newId}-total-summary`;
+                            // round total column removed; nothing to reassign here
 
 
                             // Update details row and its content
