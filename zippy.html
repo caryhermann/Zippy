@@ -441,33 +441,51 @@
         const mainContent = document.getElementById('main-content');
         const splashContainer = document.getElementById('splash-container');
 
-        // 1. Create initial image halves immediately (match classic.html behavior)
-        const leftHalf = document.createElement('div');
-        leftHalf.className = 'absolute top-0 left-0 w-1/2 h-full bg-cover bg-no-repeat bg-left transition-transform duration-700 ease-in';
-        leftHalf.style.backgroundImage = "url('zippy.png')";
+        // 1. Show a single full image first, then create halves and animate the split
+        const fullImage = document.createElement('div');
+        // Use bg-cover so the image fills the splash container like classic.html
+        fullImage.className = 'absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-700 ease-in';
+        fullImage.style.backgroundImage = "url('zippy.png')";
+        fullImage.style.opacity = '1';
+        splashContainer.appendChild(fullImage);
 
-        const rightHalf = document.createElement('div');
-        rightHalf.className = 'absolute top-0 right-0 w-1/2 h-full bg-cover bg-no-repeat bg-right transition-transform duration-700 ease-in';
-        rightHalf.style.backgroundImage = "url('zippy.png')";
-
-        splashContainer.appendChild(leftHalf);
-        splashContainer.appendChild(rightHalf);
-
-        // 2. Wait 2 seconds
+        // 2. Wait 2 seconds, then create halves on top of the full image and animate the split
         setTimeout(() => {
-            // 3. Trigger split animation
+            // Create left/right halves (positioned above the full image)
+            const leftHalf = document.createElement('div');
+            leftHalf.className = 'absolute top-0 left-0 w-1/2 h-full bg-cover bg-no-repeat bg-left transition-transform duration-700 ease-in';
+            leftHalf.style.backgroundImage = "url('zippy.png')";
+            leftHalf.style.transform = 'translateX(0)';
+
+            const rightHalf = document.createElement('div');
+            rightHalf.className = 'absolute top-0 right-0 w-1/2 h-full bg-cover bg-no-repeat bg-right transition-transform duration-700 ease-in';
+            rightHalf.style.backgroundImage = "url('zippy.png')";
+            rightHalf.style.transform = 'translateX(0)';
+
+            // Append halves above the full image
+            splashContainer.appendChild(leftHalf);
+            splashContainer.appendChild(rightHalf);
+
+            // Force a reflow so the browser picks up the initial positions
+            void leftHalf.offsetWidth;
+
+            // Start the split animation and fade out the full image
             leftHalf.style.transform = 'translateX(-100%)';
             rightHalf.style.transform = 'translateX(100%)';
+            fullImage.style.opacity = '0';
 
-            // 4. Listen for animation to end on one of the halves
+            // When the split animation ends, fade out and hide the splash screen, then reveal main content
             rightHalf.addEventListener('transitionend', () => {
-                // 5. Fade out the entire splash screen
                 splashScreen.style.opacity = '0';
-
-                // 6. When fade out is done, hide splash screen and show main content
                 splashScreen.addEventListener('transitionend', () => {
+                    // Hide splash and show main content
                     splashScreen.style.display = 'none';
                     mainContent.classList.remove('hidden');
+
+                    // Cleanup temporary elements
+                    try { fullImage.remove(); } catch (e) {}
+                    try { leftHalf.remove(); } catch (e) {}
+                    try { rightHalf.remove(); } catch (e) {}
                 }, { once: true });
             }, { once: true });
         }, 2000); // 2-second delay before splitting
