@@ -6,7 +6,7 @@
     <title>My-T Scorer – Zippy Scorer</title>
     <link rel="icon" href="mahimage.jpg" type="image/jpeg">
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
+   <style>
         
         /* Base styles (from index.html) */
         body {
@@ -20,6 +20,20 @@
             to { transform: rotate(360deg); }
         }
         .spin-animation { animation-name: spin; animation-duration: 0.7s; animation-timing-function: linear; animation-iteration-count: 1; }
+
+        /* Dice styles */
+        .die { width: 4rem; height: 4rem; position: relative; background-color: #ffffff; border-radius: 0.75rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); border: 2px solid #333; }
+        .die-container { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; }
+        
+        /* Dice dot styles */
+        .dot { width: 0.5rem; height: 0.5rem; background-color: #1a202c; border-radius: 50%; position: absolute; }
+        .dot.top-left { top: 0.5rem; left: 0.5rem; }
+        .dot.top-right { top: 0.5rem; right: 0.5rem; }
+        .dot.middle-left { top: 50%; left: 0.5rem; transform: translateY(-50%); }
+        .dot.middle-right { top: 50%; right: 0.5rem; transform: translateY(-50%); }
+        .dot.bottom-left { bottom: 0.5rem; left: 0.5rem; }
+        .dot.bottom-right { bottom: 0.5rem; right: 0.5rem; }
+        .dot.center { top: 50%; left: 50%; transform: translate(-50%, -50%); }
         /* --- END NEW --- */
 
         /* --- Light Theme (Default) --- */
@@ -119,6 +133,15 @@
         /* --- END NEW --- */
 
         #main-content.hidden { display: none; } /* MODIFICATION: Hide content for splash */
+
+        /* Dice stats styles */
+        .dice-stats-bg {
+            background-color: #f9fafb; /* gray-50 */
+            border: 1px solid #e5e7eb; /* gray-200 */
+        }
+        .dice-stats-label {
+            color: #6b7280; /* gray-500 */
+        }
 
         /* --- Dark Theme --- */
         .dark body {
@@ -274,9 +297,9 @@
 
         .player-entry-row-1 {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr 1fr;
-            gap: 1rem;
-            padding: 1rem;
+            grid-template-columns: 0.8fr 1.2fr 0.8fr 0.8fr;
+            gap: 0.75rem;
+            padding: 0.75rem;
             border-bottom: 1px solid #e5e7eb; /* gray-200 */
         }
         .dark .player-entry-row-1 {
@@ -310,10 +333,26 @@
             width: 70px;
             text-align: center;
         }
+
+        /* Dark theme dice styles */
+        .dark .die {
+            background-color: #cbd5e0;
+            color: #1a202c;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .dark .dice-stats-bg {
+            background-color: #374151; /* gray-700 */
+            border: 1px solid #4b5563; /* gray-600 */
+        }
+        .dark .dice-stats-label {
+            color: #d1d5db; /* gray-300 */
+        }
         
         @media (max-width: 640px) {
             .player-entry-row-1 {
                 grid-template-columns: 1fr 1fr;
+                gap: 0.5rem;
+                padding: 0.5rem;
             }
         }
     </style>
@@ -407,6 +446,7 @@
                 <div class="btn-container">
                     <button id="closeSettingsBtn" class="btn btn-gray">Close</button>
                 </div>
+                 <div id="settingsVersionFooter" class="w-full text-center mt-2 text-xs text-gray-500 dark:text-gray-400">Version 0.06</div>
              </div>
         </div>
     </div>
@@ -431,7 +471,7 @@
                     <ul class="list-disc list-inside space-y-2 mb-4">
                         <li><strong>Hu - Self Draw:</strong> A player wins by drawing a tile from the wall. This event has the highest base points.</li>
                         <li><strong>Hu - Discard:</strong> A player wins by claiming a discard from another player. This event has moderate points.</li>
-                        <li><strong>No-Hu - Ready:</strong> When the round ends with no winner, a "Ready" player (who was one tile away from winning) receives points from the other players.</li>
+                        <li><strong>No-Hu - Ready:</strong> When the round ends with no winner, a "Ready" player (who was one tile away from winning).</li>
                         <li><strong>No-Hu - Not Ready:</strong> A player who was not ready when the round ended. This event contributes no points.</li>
                     </ul>
 
@@ -471,8 +511,63 @@
         </div>
     </div>
 
+    <div class="custom-modal" id="diceModal">
+        <div class="modal-content">
+            <div class="modal-body">
+                <h3 class="text-xl font-bold mb-4">Dice Roll</h3>
+                <div class="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4 mb-8">
+                    <label for="diceCount" class="text-lg font-semibold text-color-dynamic">Number of Dice:</label>
+                    <select id="diceCount" class="p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
+                        <option value="1">1</option>
+                        <option value="2" selected>2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                    </select>
+                </div>
+                <div id="diceResults" class="die-container mb-6"></div>
+                 <div id="stats" class="w-full grid grid-cols-2 sm:grid-cols-4 gap-4 text-center mb-6">
+                    <div id="total" class="p-4 rounded-lg shadow-inner dice-stats-bg">
+                        <p class="text-sm dice-stats-label">Total</p>
+                        <p class="text-3xl font-bold text-green-400 mt-1">0</p>
+                    </div>
+                    <div id="high" class="p-4 rounded-lg shadow-inner dice-stats-bg">
+                        <p class="text-sm dice-stats-label">High</p>
+                        <p class="text-3xl font-bold text-red-400 mt-1">0</p>
+                    </div>
+                    <div id="low" class="p-4 rounded-lng shadow-inner dice-stats-bg">
+                        <p class="text-sm dice-stats-label">Low</p>
+                        <p class="text-3xl font-bold text-blue-400 mt-1">0</p>
+                    </div>
+                    <div id="direction" class="p-4 rounded-lg shadow-inner dice-stats-bg">
+                        <p class="text-sm dice-stats-label">Direction</p>
+                        <p class="text-3xl font-bold text-purple-400 mt-1">East</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="btn-container">
+                    <button id="rollDiceAgainBtn" class="btn btn-blue">Roll Again</button>
+                    <button id="closeDiceBtn" class="btn btn-gray">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="container rounded-card relative">
+         <div class="absolute top-4 left-4 z-10">
+            <svg onclick="window.location.href='home.html'" xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 icon-color-dynamic cursor-pointer transition" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
+         </div>
          <div class="absolute top-4 right-4 flex items-center gap-4 z-10">
+            <svg id="rollDiceBtn" xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 icon-color-dynamic cursor-pointer transition" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M3 2a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1H3zm10 11H3V3h10v10z"/>
+              <circle cx="4.5" cy="4.5" r="1"/>
+              <circle cx="11.5" cy="11.5" r="1"/>
+              <circle cx="4.5" cy="11.5" r="1"/>
+              <circle cx="11.5" cy="4.5" r="1"/>
+              <circle cx="8" cy="8" r="1"/>
+            </svg>
             <svg id="settingsBtn" xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 icon-color-dynamic cursor-pointer transition" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
               <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -480,7 +575,7 @@
         </div>
         <h1 class="text-2xl sm:text-3xl font-bold text-center mb-6 text-color-dynamic flex items-center justify-center gap-4">
             <img id="title-icon" src="zippy.png" alt="Zippy Icon" class="h-12 w-12 rounded-full cursor-pointer">
-            <span>My-T Zippy Sichuan Scorer</span>
+            <span>Zippy Sichuan Mahjong</span>
         </h1>
 
         <div class="table-container">
@@ -499,6 +594,9 @@
             <button id="scoringRulesBtn" class="btn btn-yellow">Scoring Rules</button>
             <button id="resetBtn" class="btn btn-red">Reset All</button>
             </div>
+    </div>
+    <div id="copyright-footer" style="position: fixed; bottom: 10px; left: 0; right: 0; text-align: center; font-size: 12px; color: #6b7280; z-index: 10;">
+         Copyright © 2025 M. Tong and C. Hermann. All rights reserved.
     </div>
 </div>
 
@@ -640,6 +738,23 @@
                 input.id = `player-name-${index}`;
                 input.value = name;
                 input.classList.add('player-input', 'w-full', 'text-center');
+                // Clear default name on focus if it's still the default
+                input.addEventListener('focus', (e) => {
+                    if (e.target.value === `P${index + 1}`) {
+                        e.target.value = '';
+                    }
+                });
+                
+                // Restore default name on blur if empty
+                input.addEventListener('blur', (e) => {
+                    if (e.target.value.trim() === '') {
+                        e.target.value = `P${index + 1}`;
+                        players[index] = `P${index + 1}`;
+                        renderTableHeaders();
+                        updateAllRoundPlayerNames();
+                    }
+                });
+                
                 input.addEventListener('change', (e) => {
                     players[index] = e.target.value.trim() || `P${index + 1}`;
                     renderTableHeaders();
@@ -873,13 +988,13 @@
                     <div class="player-name-static" data-player-index="${playerIndex}">${players[playerIndex]}</div>
                 </div>
             `;
-            // MODIFICATION: Event Dropdown with "Hu - Self Draw" as default
+            // MODIFICATION: Event Dropdown with "No-Hu - Not Ready" as default
             const eventFieldId = `event-${roundId}-${playerId}`;
             row1.innerHTML += `
                 <div class="flex flex-col">
                     <label for="${eventFieldId}" class="text-sm font-medium penalty-label-color mb-1">Event</label>
                     <select id="${eventFieldId}" class="player-entry-input" data-field="event">
-                        ${eventKeys.map(key => `<option value="${key}" ${key === 'hu-self-draw' ? 'selected' : ''}>${eventSettings[key].name}</option>`).join('')}
+                        ${eventKeys.map(key => `<option value="${key}" ${key === 'no-hu-not-ready' ? 'selected' : ''}>${eventSettings[key].name}</option>`).join('')}
                     </select>
                 </div>
             `;
@@ -1187,6 +1302,22 @@
             // Open the first round's detail row on initial load
             const firstDetail = document.getElementById(`round-details-${roundCount}`);
             if (firstDetail) firstDetail.style.display = 'table-row';
+        }
+
+        // Initialize dice functionality
+        if (window.diceRoller) {
+            window.diceRoller.init();
+        }
+
+        // Update version display from centralized version file
+        if (window.MahjongVersions) {
+            const version = window.MahjongVersions.getDisplayVersion('zippy');
+            const footerElement = document.getElementById('settingsVersionFooter');
+            if (footerElement) footerElement.textContent = `Version ${version}`;
+            
+            // Update copyright
+            const copyrightElement = document.getElementById('copyright-footer');
+            if (copyrightElement) copyrightElement.textContent = window.MahjongVersions.getCopyright();
         }
 
         initialize();
